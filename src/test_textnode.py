@@ -50,5 +50,17 @@ class TestTextNode(unittest.TestCase):
         self.assertNotEqual(node1, node3)
         self.assertNotEqual(node2, node3)
 
+    def test_repr(self):
+        text = "sample text"
+        text_type = TextType.ITALIC
+        url = "http://example.com"
+
+        node = TextNode(text, text_type, url)
+
+        result = node.__repr__()
+
+        self.assertEqual(result,
+                         "TextNode(sample text, italic, http://example.com)")
+
 if __name__ == "__main__":
     unittest.main()

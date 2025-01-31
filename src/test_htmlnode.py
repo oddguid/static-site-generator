@@ -1,7 +1,7 @@
 import unittest
 from htmlnode import HTMLNode
 
-class TestTextNode(unittest.TestCase):
+class TestHTMLNode(unittest.TestCase):
     def test_ctor_none(self):
         node = HTMLNode()
 
@@ -47,4 +47,20 @@ class TestTextNode(unittest.TestCase):
         result = node.props_to_html()
 
         self.assertEqual(result, " id=\"foo\" name=\"bar\"")
+
+    def test_repr(self):
+        tag = "<p>"
+        value = "sample text"
+        children = [ HTMLNode(tag) ]
+        props = { "id": "foo", "name": "bar" }
+
+        node = HTMLNode(tag, value, children, props)
+
+        result = node.__repr__()
+
+        self.assertEqual(result,
+                         "HTMLNode(<p>, sample text, [HTMLNode(<p>, None, None, None)], {'id': 'foo', 'name': 'bar'})")
+
+if __name__ == "__main__":
+    unittest.main()
 
