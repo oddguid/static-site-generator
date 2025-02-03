@@ -5,7 +5,8 @@ from convert import (
         extract_markdown_images,
         extract_markdown_links,
         split_nodes_image,
-        split_nodes_link
+        split_nodes_link,
+        text_to_textnodes
     )
 from leafnode import LeafNode
 from textnode import TextNode, TextType
@@ -358,6 +359,26 @@ class TestConvert(unittest.TestCase):
                 TextNode("zelda", TextType.LINK, "w3.org"),
                 TextNode("simple bold", TextType.BOLD)
             ])
+
+    def test_text_to_textnodes(self):
+        text = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+
+        result = text_to_textnodes(text)
+
+        self.assertListEqual(result,
+            [
+                TextNode("This is ", TextType.NORMAL),
+                TextNode("text", TextType.BOLD),
+                TextNode(" with an ", TextType.NORMAL),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" word and a ", TextType.NORMAL),
+                TextNode("code block", TextType.CODE),
+                TextNode(" and an ", TextType.NORMAL),
+                TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+                TextNode(" and a ", TextType.NORMAL),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+            ])
+
 
 if __name__ == "__main__":
     unittest.main()
