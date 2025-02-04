@@ -138,3 +138,22 @@ def text_to_textnodes(text):
     nodes = split_nodes_link(nodes)
 
     return nodes
+
+def markdown_to_blocks(markdown):
+    blocks = []
+    current_block = []
+
+    lines = markdown.split("\n")
+
+    for line in lines:
+        if len(line) == 0:
+            if len(current_block) > 0:
+                blocks.append("\n".join(current_block))
+                current_block = []
+        else:
+            current_block.append(line.strip())
+
+    if len(current_block) > 0:
+        blocks.append("\n".join(current_block))
+
+    return blocks

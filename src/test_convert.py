@@ -6,7 +6,8 @@ from convert import (
         extract_markdown_links,
         split_nodes_image,
         split_nodes_link,
-        text_to_textnodes
+        text_to_textnodes,
+        markdown_to_blocks
     )
 from leafnode import LeafNode
 from textnode import TextNode, TextType
@@ -379,6 +380,28 @@ class TestConvert(unittest.TestCase):
                 TextNode("link", TextType.LINK, "https://boot.dev"),
             ])
 
+    def test_markdown_to_blocks(self):
+        text = """
+  # This is a heading
+
+This is a paragraph of text. It has some **bold** and *italic* words inside of it.
+
+
+
+
+* This is the first list item in a list block
+* This is a list item
+* This is another list item
+        """
+
+        result = markdown_to_blocks(text)
+
+        self.assertListEqual(result,
+            [
+                '# This is a heading',
+                'This is a paragraph of text. It has some **bold** and *italic* words inside of it.',
+                '* This is the first list item in a list block\n* This is a list item\n* This is another list item\n'
+            ])
 
 if __name__ == "__main__":
     unittest.main()
