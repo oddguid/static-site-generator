@@ -157,3 +157,39 @@ def markdown_to_blocks(markdown):
         blocks.append("\n".join(current_block))
 
     return blocks
+
+def block_to_block_type(block_text):
+    # heading
+    if re.match(r'^[#]{1,6} .*', block_text):
+        return "heading"
+
+    # code
+    if block_text.startswith("```") and block_text.endswith("```"):
+        return "code"
+
+    # lists or quote
+    lines = block_text.split("\n")
+    quote_count = 0
+    unordered_list_count = 0
+    ordered_list_count = 1
+
+    for line in lines:
+        if line.startswith(">"):
+            quote_count += 1
+
+        if re.match(r'^[*-] .*', line):
+            unordered_list_count +=1
+
+        if line.startswith(f"{ordered_list_count}. "):
+            ordered_list_count += 1
+
+    if len(lines) == quote_count:
+        return "quote"
+
+    if len(lines) == unordered_list_count:
+        return "unordered_list"
+
+    if len(lines) == ordered_list_count - 1:
+        return "ordered_list"
+
+    return "paragraph"

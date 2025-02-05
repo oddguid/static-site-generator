@@ -7,7 +7,8 @@ from convert import (
         split_nodes_image,
         split_nodes_link,
         text_to_textnodes,
-        markdown_to_blocks
+        markdown_to_blocks,
+        block_to_block_type
     )
 from leafnode import LeafNode
 from textnode import TextNode, TextType
@@ -402,6 +403,165 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
                 'This is a paragraph of text. It has some **bold** and *italic* words inside of it.',
                 '* This is the first list item in a list block\n* This is a list item\n* This is another list item\n'
             ])
+
+    def test_block_to_block_type_empty(self):
+        text = ""
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "paragraph")
+
+    def test_block_to_block_type_paragraph(self):
+        text = "sample text"
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "paragraph")
+
+    def test_block_to_block_type_heading(self):
+        text1 = "# heading 1"
+        text2 = "## heading 2"
+        text3 = "### heading 3"
+        text4 = "#### heading 4"
+        text5 = "##### heading 5"
+        text6 = "###### heading 6"
+
+        result = block_to_block_type(text1)
+
+        self.assertEqual(result, "heading")
+
+        result = block_to_block_type(text2)
+
+        self.assertEqual(result, "heading")
+
+        result = block_to_block_type(text3)
+
+        self.assertEqual(result, "heading")
+
+        result = block_to_block_type(text4)
+
+        self.assertEqual(result, "heading")
+
+        result = block_to_block_type(text5)
+
+        self.assertEqual(result, "heading")
+
+        result = block_to_block_type(text6)
+
+        self.assertEqual(result, "heading")
+
+    def test_block_to_block_type_heading_too_long(self):
+        text = "####### heading 7"
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "paragraph")
+
+    def test_block_to_block_type_code(self):
+        text = """```
+int main() {
+  return 0;
+}
+```"""
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "code")
+
+    def test_block_to_block_type_almost_code(self):
+        text = """```
+int main() {
+  return 0;
+}`"""
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "paragraph")
+
+    def test_block_to_block_type_quote(self):
+        text = """>quote
+>quote
+>quote"""
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "quote")
+
+    def test_block_to_block_type_almost_quote(self):
+        text = """>quote
+>quote
+quote"""
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "paragraph")
+
+    def test_block_to_block_type_unordered_list(self):
+        text = """* item
+- foo
+* bar"""
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "unordered_list")
+
+
+    def test_block_to_block_type_almost_unordered_list(self):
+        text = """* item
+foo
+* bar"""
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "paragraph")
+
+    def test_block_to_block_type_ordered_list(self):
+        text = """1. item
+2. foo
+3. bar
+4. fizz
+5. buzz
+6. fizzbuzz
+7. oof
+8. rab
+9. zzif
+10. zzub"""
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "ordered_list")
+
+    def test_block_to_block_type_almost_ordered_list(self):
+        text = """1. item
+2. foo
+3. bar
+4. fizz
+5. buzz
+6. fizzbuzz
+oof
+rab
+7. zzif
+8. zzub"""
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "paragraph")
+
+    def test_block_to_block_type_ordered_list_count_wrong(self):
+        text = """1. item
+2. foo
+3. bar
+4. fizz
+5. buzz
+6. fizzbuzz
+10. oof
+11. rab
+12. zzif
+13. zzub"""
+
+        result = block_to_block_type(text)
+
+        self.assertEqual(result, "paragraph")
 
 if __name__ == "__main__":
     unittest.main()
