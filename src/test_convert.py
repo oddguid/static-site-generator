@@ -8,9 +8,18 @@ from convert import (
         split_nodes_link,
         text_to_textnodes,
         markdown_to_blocks,
-        block_to_block_type
+        block_to_block_type,
+        text_to_children,
+        quote_block_to_html_node,
+        unordered_list_to_html_node,
+        ordered_list_to_html_node,
+        code_to_html_node,
+        heading_to_html_node,
+        paragraph_to_html_node,
+        markdown_to_html_node
     )
 from leafnode import LeafNode
+from parentnode import ParentNode
 from textnode import TextNode, TextType
 
 class TestConvert(unittest.TestCase):
@@ -562,6 +571,179 @@ rab
         result = block_to_block_type(text)
 
         self.assertEqual(result, "paragraph")
+
+    def test_text_to_children_normal(self):
+        text = "sample text"
+
+        result = text_to_children(text)
+
+        self.assertEqual(len(result), 1)
+
+        self.assertEqual(isinstance(result[0], LeafNode), True)
+        self.assertEqual(result[0].to_html(),
+            "sample text")
+
+    def test_text_to_children_mix(self):
+        text = """sample **bold** text
+with a bit *italic*, some `code`, an
+image ![alt img](foo.gif) and a
+[link](example.com)"""
+
+        result = text_to_children(text)
+
+        self.assertEqual(len(result), 10)
+
+        # normal
+        self.assertEqual(isinstance(result[0], LeafNode), True)
+        self.assertEqual(result[0].to_html(), "sample ")
+
+        # bold
+        self.assertEqual(isinstance(result[1], LeafNode), True)
+        self.assertEqual(result[1].to_html(), "<b>bold</b>")
+
+        # normal
+        self.assertEqual(isinstance(result[2], LeafNode), True)
+        self.assertEqual(result[2].to_html(), " text\nwith a bit ")
+
+        # italic
+        self.assertEqual(isinstance(result[3], LeafNode), True)
+        self.assertEqual(result[3].to_html(), "<i>italic</i>")
+
+        # normal
+        self.assertEqual(isinstance(result[4], LeafNode), True)
+        self.assertEqual(result[4].to_html(), ", some ")
+
+        # code
+        self.assertEqual(isinstance(result[5], LeafNode), True)
+        self.assertEqual(result[5].to_html(), "<code>code</code>")
+
+        # normal
+        self.assertEqual(isinstance(result[6], LeafNode), True)
+        self.assertEqual(result[6].to_html(), ", an\nimage ")
+
+        # image
+        self.assertEqual(isinstance(result[7], LeafNode), True)
+        self.assertEqual(result[7].to_html(),
+            "<img src=\"foo.gif\" alt=\"alt img\"></img>")
+
+        # normal
+        self.assertEqual(isinstance(result[8], LeafNode), True)
+        self.assertEqual(result[8].to_html(), " and a\n")
+
+        # link
+        self.assertEqual(isinstance(result[9], LeafNode), True)
+        self.assertEqual(result[9].to_html(),
+            "<a href=\"example.com\">link</a>")
+
+    def test_quote_block_to_html_node(self):
+        text = """>quote
+>foo
+>bar"""
+
+        result = quote_block_to_html_node(text)
+
+        self.assertEqual(isinstance(result, ParentNode), True)
+        self.assertEqual(result.to_html(),
+            "<blockquote>quote\nfoo\nbar</blockquote>")
+
+    def test_unordered_list_to_html_node(self):
+        text = """* item
+- foo
+* bar"""
+
+        result = unordered_list_to_html_node(text)
+
+        self.assertEqual(isinstance(result, ParentNode), True)
+        self.assertEqual(result.to_html(),
+            "<ul><li>item</li><li>foo</li><li>bar</li></ul>")
+
+    def test_unordered_list_to_html_node(self):
+        text = """1. item
+2. foo
+3. bar
+4. fizz
+5. buzz
+6. fizzbuzz
+7. oof
+8. rab
+9. zzif
+10. zzub"""
+
+        result = ordered_list_to_html_node(text)
+
+        self.assertEqual(isinstance(result, ParentNode), True)
+        self.assertEqual(result.to_html(),
+            "<ol><li>item</li><li>foo</li><li>bar</li>\
+<li>fizz</li><li>buzz</li><li>fizzbuzz</li><li>oof</li>\
+<li>rab</li><li>zzif</li><li>zzub</li></ol>")
+
+    def test_code_to_html_node(self):
+        text = """```
+int main() {
+  return 0;
+}
+```"""
+        result = code_to_html_node(text)
+
+        self.assertEqual(isinstance(result, ParentNode), True)
+        self.assertEqual(result.to_html(),
+            "<pre><code>\nint main() {\n  return 0;\n}\n</code></pre>")
+
+    def test_heading_to_html_node(self):
+        text = "### heading"
+
+        result = heading_to_html_node(text)
+
+        self.assertEqual(isinstance(result, ParentNode), True)
+        self.assertEqual(result.to_html(),
+            "<h3>heading</h3>")
+
+    def test_paragraph_to_html_node(self):
+        text = "sample text with **bold**"
+
+        result = paragraph_to_html_node(text)
+
+        self.assertEqual(isinstance(result, ParentNode), True)
+        self.assertEqual(result.to_html(),
+            "<p>sample text with <b>bold</b></p>")
+
+    def test_markdown_to_html_node(self):
+        text = """### heading
+
+Sample text with **bold** and *italic* and `code`
+and an image ![alt](foo.png) and a [link](example.com)
+
+>quote
+>...
+>end
+
+```
+int main() {
+  return 0;
+}
+```
+
+* foo
+* bar
+
+1. fizz
+2. buzz
+3. fizzbuzz"""
+
+        result = markdown_to_html_node(text)
+
+        self.assertEqual(isinstance(result, ParentNode), True)
+        self.assertEqual(result.to_html(),
+            "<div>\
+<h3>heading</h3>\
+<p>Sample text with <b>bold</b> and <i>italic</i> and <code>code</code> \
+and an image <img src=\"foo.png\" alt=\"alt\"></img>\
+ and a <a href=\"example.com\">link</a></p>\
+<blockquote>quote\n...\nend</blockquote>\
+<pre><code>\nint main() {\nreturn 0;\n}\n</code></pre>\
+<ul><li>foo</li><li>bar</li></ul>\
+<ol><li>fizz</li><li>buzz</li><li>fizzbuzz</li></ol>\
+</div>")
 
 if __name__ == "__main__":
     unittest.main()

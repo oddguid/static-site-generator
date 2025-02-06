@@ -193,3 +193,108 @@ def block_to_block_type(block_text):
         return "ordered_list"
 
     return "paragraph"
+
+def markdown_to_html_node(markdown):
+    # split text into blocks
+    markdown_blocks = markdown_to_blocks(markdown)
+
+    children = []
+
+    for markdown_block in markdown_blocks:
+        block_type = block_to_block_type(markdown_block)
+
+        match (block_type):
+            case "heading":
+                children.append(heading_to_html_node(markdown_block))
+            case "code":
+                children.append(code_to_html_node(markdown_block))
+            case "quote":
+                children.append(quote_block_to_html_node(markdown_block))
+            case "unordered_list":
+                children.append(unordered_list_to_html_node(markdown_block))
+            case "ordered_list":
+                children.append(ordered_list_to_html_node(markdown_block))
+            case "paragraph":
+                children.append(paragraph_to_html_node(markdown_block))
+            case _:
+                raise Exception("Invalid HTML: text type invalid")
+
+    return ParentNode("div", children)
+
+def text_to_children(text):
+    # convert to text nodes
+    text_nodes = text_to_textnodes(text)
+
+    # convert to html nodes
+    html_nodes = []
+
+    for text_node in text_nodes:
+        html_node = text_node_to_html_node(text_node)
+        html_nodes.append(html_node)
+
+    return html_nodes
+
+def quote_block_to_html_node(block):
+    # split into lines
+    lines = block.split("\n")
+
+    # remove > from lines
+    content = []
+
+    for line in lines:
+        content.append(line[1:].strip())
+
+    children = text_to_children("\n".join(content))
+
+    return ParentNode("blockquote", children)
+
+def unordered_list_to_html_node(block):
+    # split into lines
+    lines = block.split("\n")
+
+    # replace */- with <li>
+    item_list = []
+
+    for line in lines:
+        children = text_to_children(line[2:])
+        item_list.append(ParentNode("li", children))
+
+    return ParentNode("ul", item_list)
+
+def ordered_list_to_html_node(block):
+    # split into lines
+    lines = block.split("\n")
+
+    # replace number with <li>
+    item_list = []
+
+    for line in lines:
+        children = text_to_children(line[line.index(". ") + 2:])
+        item_list.append(ParentNode("li", children))
+
+    return ParentNode("ol", item_list)
+
+def code_to_html_node(block):
+    # strip ````
+    content = block.replace("```", "")
+
+    children = text_to_children(content)
+    code = ParentNode("code", children)
+
+    return ParentNode("pre", [code])
+
+def heading_to_html_node(block):
+    # index of first space is equal to number of #
+    index = block.index(" ")
+
+    text = block[index + 1:]
+    children = text_to_children(text)
+
+    return ParentNode(f"h{index}", children)
+
+def paragraph_to_html_node(block):
+    lines = block.split("\n")
+    paragraph = " ".join(lines)
+    children = text_to_children(paragraph)
+
+    return ParentNode("p", children)
